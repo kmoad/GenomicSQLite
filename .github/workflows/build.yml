@@ -99,11 +99,6 @@ jobs:
     runs-on: ubuntu-20.04
     needs: [linux-so, macOS-dylib]
     steps:
-    - uses: actions/checkout@v2
-    - name: detect GIT_REVISION
-      run: |
-        git fetch origin --tags
-        echo "::set-env name=GIT_REVISION::$(git describe --tags --always)"
     - name: fetch libgenomicsqlite.so
       uses: actions/download-artifact@v2
       with:
@@ -112,11 +107,15 @@ jobs:
       uses: actions/download-artifact@v2
       with:
         name: libgenomicsqlite.dylib
-    - name: prepare artifacts
-      run: cp include/genomicsqlite.h .
+    - uses: actions/checkout@v2
+    - name: detect GIT_REVISION
+      run: |
+        cp include/genomicsqlite.h .
+        git fetch origin --tags
+        echo "::set-env name=GIT_REVISION::$(git describe --tags --always)"
     - uses: actions/upload-artifact@v2
       with:
-        name: GenomicSQLite-{{ GIT_REVISION }}
+        name: GenomicSQLite-${{ env.GIT_REVISION }}
         path: |
           LICENSE
           genomicsqlite.h

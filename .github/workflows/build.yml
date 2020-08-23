@@ -39,10 +39,6 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v2
-    - name: detect GIT_REVISION
-      run: |
-        git fetch origin --tags
-        echo "::set-env name=GIT_REVISION::$(git describe --tags --always)"
     - name: build loaders
       run: |
         sudo apt-get install -y $APT_DEPS
@@ -63,20 +59,13 @@ jobs:
       run: cp build/libgenomicsqlite.so include/genomicsqlite.h .
     - uses: actions/upload-artifact@v2
       with:
-        name: GenomicSQLite-Linux-x86_64-${{ env.GIT_REVISION }}
-        path: |
-          libgenomicsqlite.so
-          genomicsqlite.h
-          LICENSE
+        name: libgenomicsqlite.so
+        path: libgenomicsqlite.so
 
   macOS-dylib:
     runs-on: macOS-10.15
     steps:
     - uses: actions/checkout@v2
-    - name: detect GIT_REVISION
-      run: |
-        git fetch origin --tags
-        echo "::set-env name=GIT_REVISION::$(git describe --tags --always)"
     - name: dependencies
       run: |
         brew install $BREW_DEPS
@@ -103,8 +92,33 @@ jobs:
       run: cp build/libgenomicsqlite.dylib include/genomicsqlite.h .
     - uses: actions/upload-artifact@v2
       with:
-        name: GenomicSQLite-macOS-${{ env.GIT_REVISION }}
+        name: libgenomicsqlite.dylib
+        path: libgenomicsqlite.dylib
+
+  combined-zip:
+    runs-on: ubuntu-20.04
+    needs: [linux-so, macOS-dylib]
+    steps:
+    - uses: actions/checkout@v2
+    - name: detect GIT_REVISION
+      run: |
+        git fetch origin --tags
+        echo "::set-env name=GIT_REVISION::$(git describe --tags --always)"
+    - name: fetch libgenomicsqlite.so
+      uses: actions/download-artifact@v2
+      with:
+        name: libgenomicsqlite.so
+    - name: fetch libgenomicsqlite.dylib
+      uses: actions/download-artifact@v2
+      with:
+        name: libgenomicsqlite.dylib
+    - name: prepare artifacts
+      run: cp include/genomicsqlite.h .
+    - uses: actions/upload-artifact@v2
+      with:
+        name: GenomicSQLite-{{ GIT_REVISION }}
         path: |
-          libgenomicsqlite.dylib
-          genomicsqlite.h
           LICENSE
+          genomicsqlite.h
+          libgenomicsqlite.so
+          libgenomicsqlite.dylib

@@ -99,6 +99,7 @@ jobs:
     runs-on: ubuntu-20.04
     needs: [linux-so, macOS-dylib]
     steps:
+    - uses: actions/checkout@v2
     - name: fetch libgenomicsqlite.so
       uses: actions/download-artifact@v2
       with:
@@ -107,7 +108,6 @@ jobs:
       uses: actions/download-artifact@v2
       with:
         name: libgenomicsqlite.dylib
-    - uses: actions/checkout@v2
     - name: detect GIT_REVISION
       run: |
         cp include/genomicsqlite.h .
